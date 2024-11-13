@@ -125,7 +125,29 @@ ylimits<-sf::st_bbox(studyarea)[c(2,4)]
 saExt<-terra::ext(studyarea)
 
 # crop the woody biomass to the extent of the studyarea
+woodybiom_sa <- terra::crop(woodybiom, saExt)
 
+woody_map_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data=woodybiom_sa) +
+  scale_fill_gradientn(colours=rev(terrain.colors(6)),
+                       limits=c(0.77, 6.55),
+                       oob=squish,
+                       name = "TBA/ha") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Woody Biomass in the study area")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+woody_map_sa
 
 # plot the woody biomass
 
