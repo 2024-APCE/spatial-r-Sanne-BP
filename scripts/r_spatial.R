@@ -3,7 +3,9 @@
 
 rm(list = ls())
 # set the working directory where your GIS data are located
-setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
+#setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
+setwd("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/Advanced Population and Community Ecology/APCE2024/apce2024gis")
+
 
 # restore the libraries of the project 
 renv::restore()
@@ -34,9 +36,10 @@ barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "Spectral"))
 
 barplot(rep(1,10), col = RColorBrewer::brewer.pal(10, "BrBG"))
 library(viridis)
-barplot(rep(1,10), col = viridis::viridis(10))
+#for reversing color: rev
+barplot(rep(1,10), col = rev(viridis::viridis(10)))
 barplot(rep(1,10), col = viridis::plasma(10))
-barplot(rep(1,10), col = viridis::heat(10))
+
 viridis::plasma(10)
 library(wesanderson)
 barplot(rep(1,10), col = rev(wesanderson::wes_palette("Zissou1", 10, type = "continuous")))
@@ -45,6 +48,8 @@ pal_zissou2<-wesanderson::wes_palette("Zissou1", 10, type = "continuous")
 pal_zissou1
 
 # load the vector data for the whole ecosystem
+protected_areas
+plot(protected_areas)
 sf::st_layers("./2022_protected_areas/protected_areas.gpkg")
 protected_areas<-terra::vect("./2022_protected_areas/protected_areas.gpkg",
             layer="protected_areas_2022") # read protected area boundaries)
@@ -67,13 +72,42 @@ elevation<-terra::rast("./2023_elevation/elevation_90m.tif")
 
 # inspect the data 
 class(protected_areas)
-
+class(elevation)
+plot(protected_areas)
+plot(elevation)
+plot(protected_areas, add=T)
 
 # set the limits of the map to show (xmin, xmax, ymin, ymax in utm36 coordinates)
 xlimits<-c(550000,900000)
 ylimits<-c(9600000,9950000)
 
 # plot the woody biomass map that you want to predict
+#class:
+Sys.setenv(PROJ_LIB = "/opt/homebrew/Cellar/proj/9.5.0/share/proj")
+
+woody_map <- ggplot() + 
+  tidyterra::geom_spatraster(data=woodybiom) +
+  scale_fill_gradientn(colours=rev(terrain.colors(6)),
+                       limits=c(0.77, 6.55),
+                       oob=squish,
+                       name = "TBA/ha") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Woody Biomass in the study area")+
+  coord_sf(xlim=xlimits,ylim=ylimits,datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+woody_map
+                             
+ggsave("woody_map.png", woody_map, width=10, height=10, dpi=300)
+  
 
 # plot the rainfall map
 
