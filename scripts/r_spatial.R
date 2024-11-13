@@ -8,6 +8,9 @@ setwd("G:/Shared drives/_Org OlffLab/Teaching/APCE/APCE2024/APCE2024GIS")
 # restore the libraries of the project 
 renv::restore()
 
+install.packages("remotes")
+remotes::install_github("rspatial/terra")
+install.packages("terra")
 
 # load the different libraries
 library(terra)       # for working with raster data
