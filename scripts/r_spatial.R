@@ -214,9 +214,35 @@ map_dist2river50_sa<-ggplot() +
     width_hint = 0.2)             # Adjust width of the scale bar +
 map_dist2river50_sa
 
+#rainfall 2001-2020
+rainfall_sa<-terra::rast("./rainfall/ChirpsAnnualRainfall2001_2020.tif")
+
+map_rainfal_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data=rainfall_sa) +
+  scale_fill_gradientn(colours=pal_zissou1,
+                       limits=c(500, 1150),
+                       oob=squish,
+                       name = "mm") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Annual Rainfall in the study area (2001-2020)")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+map_rainfal_sa
+
+
 
 ### put all maps together
-all_maps_sa<-woody_map_sa +map_dist2river100_sa +map_dist2river50_sa +
+all_maps_sa<-woody_map_sa +map_dist2river100_sa +map_rainfal_sa +
   patchwork::plot_layout(ncol=2)
 all_maps_sa
 ggsave("./figures/all_maps_sa.png", width = 18, height = 18, units = "cm",dpi=300)
