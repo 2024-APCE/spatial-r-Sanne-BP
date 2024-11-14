@@ -239,13 +239,36 @@ map_rainfal_sa <- ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 map_rainfal_sa
 
+#Copernicus tree cover
+tree_cover_sa<-terra::rast("./2019_copernicus_treecover/copernicus_tree_coverOWN.tif")
 
+map_tree_cover_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data=tree_cover_sa) +
+  scale_fill_gradientn(colours=pal_zissou2,
+                       limits=c(0, 100),
+                       oob=squish,
+                       name = "cover fraction") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Copernicus tree cover in the study area")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+map_tree_cover_sa
 
 ### put all maps together
-all_maps_sa<-woody_map_sa +map_dist2river100_sa +map_rainfal_sa +
+all_maps_sa<-woody_map_sa +map_dist2river100_sa +map_rainfal_sa +map_tree_cover_sa +
   patchwork::plot_layout(ncol=2)
 all_maps_sa
-ggsave("./figures/all_maps_sa.png", width = 18, height = 18, units = "cm",dpi=300)
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 25, height = 18, units = "cm",dpi=300)
 
 
 # make maps also for the other layers that you found
