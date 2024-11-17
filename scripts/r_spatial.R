@@ -222,36 +222,14 @@ map_dist2river100_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 map_dist2river100_sa
 
-#rainfall 2001-2020
-rainfall_sa<-terra::rast("./rainfall/ChirpsAnnualRainfall2001_2020.tif")
-
-map_rainfal_sa <- ggplot() + 
-  tidyterra::geom_spatraster(data=rainfall_sa) +
-  scale_fill_gradientn(colours=pal_zissou1,
-                       limits=c(500, 1150),
-                       oob=squish,
-                       name = "mm") +
-  tidyterra::geom_spatvector(data=protected_areas,
-                             fill=NA, linewidth=0.5)+
-  tidyterra::geom_spatvector(data=rivers,
-                             colour="deepskyblue2", linewidth=0.5)+
-  tidyterra::geom_spatvector(data=studyarea,
-                             fill=NA, colour="red",linewidth=1)+
-  tidyterra::geom_spatvector(data=lakes,
-                             fill="royalblue3", linewidth=0.5)+
-  labs(title="Annual Rainfall in the study area (2001-2020)")+
-  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
-           datum = sf::st_crs(32736))+
-  theme(axis.text=element_blank(),
-        axis.ticks=element_blank())+
-  ggspatial::annotation_scale(location="bl",width_hint=0.2)
-map_rainfal_sa
-
 #rainfall Han
 rainfall_30m <- rast(terra::ext(rainfall), resolution = 30, crs = crs(rainfall))
 # Resample the raster to 30m resolution
 rainfall_30m <- terra::resample(rainfall, rainfall_30m, method = "bilinear")  
 rainfall_sa<-terra::crop(rainfall_30m,saExt) # crop to study area
+
+pal_blues <- RColorBrewer::brewer.pal(9, "Blues")
+
 rainfall_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=rainfall_sa) +
   scale_fill_gradientn(colours=pal_zissou1,
@@ -413,15 +391,15 @@ hist(cec_sa)
 cec_map_sa<-ggplot() +
   tidyterra::geom_spatraster(data=cec_sa) +
   scale_fill_gradientn(colours=pal_zissou1,
-                       limits=c(100,250),
+                       limits=c(100,310),
                        oob=squish,
-                       name="Soil\nCEC\n5-15cm") +
+                       name="Soil CEC\n5-15cm") +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.5) +
   tidyterra::geom_spatvector(data=studyarea,
                              fill=NA,linewidth=0.5,col="red") +
   tidyterra::geom_spatvector(data=lakes,
-                             fill="lightblue",linewidth=0.5) +
+                             fill="transparent",linewidth=0.5) +
   tidyterra::geom_spatvector(data=rivers,
                              col="blue",linewidth=0.5) +
   labs(title="Soil CEC") +
@@ -432,17 +410,91 @@ cec_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 cec_map_sa
 
+#ADD MORE VARIABLES::
+
+#Year last burned
+lastburn_sa<-terra::rast("./_MyData/YearLastBurned.tif")
+pal_reds <- RColorBrewer::brewer.pal(9, "Reds")
+
+lastburn_sa_map <- ggplot() + 
+  tidyterra::geom_spatraster(data=lastburn_sa) +
+  scale_fill_gradientn(colours=pal_reds,
+                       limits=c(2000, 2016),
+                       oob=squish,
+                       name = "Year") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Year since last burn")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+
+lastburn_sa_map <- ggplot() + 
+  tidyterra::geom_spatraster(data = lastburn_sa) +
+  scale_fill_gradientn(colours = pal_reds,               
+                       limits = c(2000, 2016),          
+                       oob = squish,                    
+                       name = "Year",                   
+                       breaks = c(2000, 2004, 2008, 2012, 2016), 
+                       labels = c("≤2000", "2004", "2008", "2012", "2016")) +
+  tidyterra::geom_spatvector(data = protected_areas, fill = NA, linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = rivers, colour = "deepskyblue2", linewidth = 0.5) +
+  tidyterra::geom_spatvector(data = studyarea, fill = NA, colour = "red", linewidth = 1) +
+  tidyterra::geom_spatvector(data = lakes, fill = "royalblue3", linewidth = 0.5) +
+  labs(title = "Year since last burn") +
+  coord_sf(xlim = xlimits, 
+           ylim = ylimits, 
+           expand = FALSE,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location = "bl", width_hint = 0.2)
+
+lastburn_sa_map
+
+# burning frequency map from 2001 - 2016
+burnfreq_sa<-terra::rast("./_MyData/BurnFreq.tif")
+burnfreq_map_sa<-ggplot() +
+  tidyterra::geom_spatraster(data=burnfreq_sa) +
+  scale_fill_gradientn(colours=pal_reds,
+                       limits=c(0,5),
+                       oob=squish,
+                       name="years\nburned") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=1,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="deepskyblue2",linewidth=0.5) +
+  labs(title="Number of years burned") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+burnfreq_map_sa
+
 ### put all maps together
 all_maps_sa<-woody_map_sa +elevation_map_sa +map_dist2river100_sa +rainfall_map_sa  +map_tree_cover_sa +
-  CoreProtectedAreas_map_sa + landform_map_sa + landform_hills_map_sa  +cec_map_sa+
+  CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+
   patchwork::plot_layout(ncol=3)
 all_maps_sa
 ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 27, height = 27, units = "cm",dpi=300)
 
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/landforms.png", landform_map_sa, width=10, height=10, dpi=300)
 
 # make maps also for the other layers that you found
 
-# create 500 random points in our study area
 # create 250 random points in your study area
 set.seed(123)
 rpoints <- terra::spatSample(studyarea, size = 250, 
@@ -469,10 +521,10 @@ rpoints_map_sa
 
 # and add them to the previous map
 all_maps_sa<-woody_map_sa +elevation_map_sa +map_dist2river100_sa +rainfall_map_sa  +map_tree_cover_sa +
-  CoreProtectedAreas_map_sa + landform_map_sa + landform_hills_map_sa  +cec_map_sa+ rpoints_map_sa +
+  CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+ rpoints_map_sa +
   patchwork::plot_layout(ncol=3)
 all_maps_sa
-ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 29, height = 21, units = "cm",dpi=300)
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 27, height = 27, units = "cm",dpi=300)
 
 # extract your the values of the different raster layers to the points
 #########################
@@ -517,14 +569,19 @@ landform_points <- terra::extract(landform_hills_sa, rpoints) |>
   dplyr::rename(hills=remapped)
 landform_points
 
-#ADD THESE ALL ACCORDING TO ADDED LAYERS AND THEN RUN AGAIN
+copernicus_points <- terra::extract(tree_cover_sa, rpoints) |> 
+  as_tibble()|>
+  dplyr::rename(treecover="tree-coverfraction")
+copernicus_points
+
 
 # make long format
 
 # plot how woody cover is predicted by different variables
 
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],rainfall_points[,2], 
-                 landform_points[,2],cec_points[,2],woody_points[,2]) |>
+                 landform_points[,2],cec_points[,2], burnfreq_points[,2], copernicus_points[,2],
+                 woody_points[,2]) |>
   as_tibble()
 pointdata
 pointdata <- pointdata[complete.cases(pointdata),]
