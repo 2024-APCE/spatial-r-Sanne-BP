@@ -158,6 +158,7 @@ rain_map<-ggplot() +
 rain_map 
 
 
+
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
 all_maps<-woody_map +elevation_map + rain_map+
@@ -368,6 +369,8 @@ landform_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl", width_hint = 0.2)  
 landform_map_sa
 
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/landforms.png", landform_map_sa, width=8, height=8, dpi=300)
+
 #Add Hills
 landform_hills_sa<-terra::rast("./_MyData/hills.tif")
 landform_hills_map_sa<-ggplot() +
@@ -511,9 +514,63 @@ burnfreq_map_sa<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 burnfreq_map_sa
 
+#Population density
+popdens_sa<-terra::rast("./_MyData/population_density.tif")
+popdens_map_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data=popdens_sa) +
+  scale_fill_gradientn(colours=pal_reds,
+                       limits=c(0, 70),
+                       oob=squish,
+                       name = "density") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Population density")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+popdens_map_sa
+
+# add evaporation
+evaporation_sa<-terra::rast("./_MyData/actual_evapotranspiration.tif")
+
+evaporation_30m <- rast(terra::ext(evaporation_sa), resolution = 30, crs = crs(evaporation_sa))
+# Resample the raster to 30m resolution
+evaporation_30m <- terra::resample(evaporation_sa, evaporation_30m, method = "bilinear")  
+evaporation_30m <-terra::crop(evaporation_30m,saExt) # crop to study area
+
+map_evaporation_sa <- ggplot() + 
+  tidyterra::geom_spatraster(data=evaporation_sa) +
+  scale_fill_gradientn(colours=pal_greens,
+                       limits=c(200, 700),
+                       oob=squish,
+                       name = "mm") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA, linewidth=0.5)+
+  tidyterra::geom_spatvector(data=rivers,
+                             colour="deepskyblue2", linewidth=0.5)+
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA, colour="red",linewidth=1)+
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3", linewidth=0.5)+
+  labs(title="Actual Evapotranspiration")+
+  coord_sf(xlim=xlimits,ylim=ylimits,expand=F,
+           datum = sf::st_crs(32736))+
+  theme(axis.text=element_blank(),
+        axis.ticks=element_blank())+
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+map_evaporation_sa
+
+
 ### put all maps together
-all_maps_sa<-woody_map_sa +elevation_map_sa +map_dist2river100_sa +rainfall_map_sa  +map_tree_cover_sa +
-  CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+
+all_maps_sa <- woody_map_sa +elevation_map_sa +map_dist2river100_sa + rainfall_map + map_tree_cover_sa + CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+ + popdens_map_sa + map_evaporation_sa +
   patchwork::plot_layout(ncol=3)
 all_maps_sa
 ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 27, height = 27, units = "cm",dpi=300)
@@ -548,7 +605,8 @@ rpoints_map_sa
 
 # and add them to the previous map
 all_maps_sa<-woody_map_sa +elevation_map_sa +map_dist2river100_sa +rainfall_map_sa  +map_tree_cover_sa +
-  CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+ rpoints_map_sa +
+  CoreProtectedAreas_map_sa  + landform_hills_map_sa  +cec_map_sa+ burnfreq_map_sa+ popdens_map_sa+map_evaporation_sa +
+  rpoints_map_sa +
   patchwork::plot_layout(ncol=3)
 all_maps_sa
 ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps_sa.png", width = 27, height = 27, units = "cm",dpi=300)
