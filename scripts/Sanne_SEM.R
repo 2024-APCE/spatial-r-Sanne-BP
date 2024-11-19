@@ -26,6 +26,8 @@ SEMstd <- SEMdata |>
   as_tibble()
 SEMstd
 
+write.csv(SEMstd, "SEM.csv", row.names = FALSE)
+
 # note that this does not affect the relations between the variables, only the scales  
 
 # make a pairs panel to inspect linearity of relations and expected normality of residuals
@@ -75,5 +77,44 @@ summary(woody_model_fit, standardized = T, fit.measures = T, rsquare = T)
 # visualise the model
 =======
   >>>>>>> 8a237fe2317acaad42b557f15ab08d729405ba65
+
+##################################################################################################
+#Model did not fit so well, so lets make a new one with the model that CHAT-GTP generated 
+
+multreg2_std <- lm(woody ~ dist2river + elevation + rainfall +
+                     cec + burnfreq + treecover, data = SEMstd)
+summary(multreg2_std)
+
+#you have not accounted for internal relations between the variables
+#so, now we go from this stupid model, to the smart model 
+
+# visualization of the result: 
+# browseURL("https://docs.google.com/presentation/d/1Q7uXC5Wiu0G4Xsp5uszCNHKOnf1IMI9doY-13Wbay4A/edit?usp=sharing")
+
+# Make a lavaan model as hypothesized in the Anderson et al 2007 paper and fit the model 
+woody_model2 <- 'woody ~ burnfreq + rainfall + cec + dist2river + treecover
+                burnfreq ~ rainfall + treecover 
+                rainfall ~ elevation 
+                cec ~ rainfall + elevation 
+                treecover ~ rainfall + cec'
+woody_model2
+woody_model2_fit <- lavaan::sem(woody_model2, data = SEMstd)
+
+
+# show the model results
+summary(woody_model2_fit, standardized = T, fit.measures = T, rsquare = T)
+#Use these values to assign to your drawn model 
+#Also use the R-squared values to assign to the model
+
+
+# goodness of fit (should be >0.9): CFI and TLI
+#CFI = 0.867, TLI = 0.667 --> not good, BUT better
+# badness of fit: ( should be <0.1): RMSEA, SRMR
+#RMSEA = 0.193, SRMR = 0.065 --> not good, BUT better!!!
+
+#Try to add different variables!!
+      #maybe soil texture, land use, canopy height, temperature, NDVI, herbivory, distance to           human settlements 
+
+
 
 
