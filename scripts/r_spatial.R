@@ -643,6 +643,7 @@ cec_points <- terra::extract(cec_sa, rpoints) |>
   as_tibble() |>
   dplyr::rename(cec='cec_5-15cm_mean')
 cec_points
+cec_points <- cec_points[cec_points$cec != 0, ] #filtering out cec=0, as these are in the lake
 
 burnfreq_points <- terra::extract(burnfreq_sa, rpoints) |> 
   as_tibble() |>
@@ -659,18 +660,27 @@ copernicus_points <- terra::extract(tree_cover_sa, rpoints) |>
   dplyr::rename(treecover="tree-coverfraction")
 copernicus_points
 
+population_points <- terra::extract(popdens_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(popdensity=population)
+population_points
+
+evaporation_points <- terra::extract(evaporation_sa, rpoints) |> 
+  as_tibble() |>
+  dplyr::rename(evaporation=aet)
+evaporation_points
 
 # make long format
 
 # plot how woody cover is predicted by different variables
-
 pointdata<-cbind(dist2river_points[,2],elevation_points[,2],rainfall_points[,2], 
                  landform_points[,2],cec_points[,2], burnfreq_points[,2], copernicus_points[,2],
-                 woody_points[,2]) |>
+                 population_points[,2], evaporation_points[,2], woody_points[,2]) |>
   as_tibble()
 pointdata
 pointdata <- pointdata[complete.cases(pointdata),]
 pointdata
+
 getwd()
 readr::write_csv(pointdata, "pointdata.csv")
 
@@ -687,10 +697,12 @@ psych::pairs.panels(
   stars=T
 )
 
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/correlation_panel_plot.png", width = 10, height = 10, units = "cm",dpi=300)
+
 # make long format
 names(pointdata)
 pointdata_long<-pivot_longer(data=pointdata,
-                             cols = dist2river:cec, # all except woody
+                             cols = dist2river:evaporation, # all except woody
                              names_to ="pred_var",
                              values_to = "pred_val")
 pointdata_long
@@ -714,7 +726,7 @@ summary(pca_result)
 # Plot the PCA
 plot(pca_result, scaling = 2, type="n", xlab="",ylab="")  # Use scaling = 1 for distance preservation, scaling = 2 for correlations
 # Add points for samples
-points(pca_result, display = "sites", pch=pointdata$CorProtAr+1, col = pointdata$hills+1, bg = "blue", cex = 1)
+points(pca_result, display = "sites",  col = pointdata$hills+1, bg = "blue", cex = 1)
 # Add arrows for variables
 arrows(0, 0, scores(pca_result, display = "species")[, 1], scores(pca_result, display = "species")[, 2], 
        length = 0.1, col = "red")
@@ -730,10 +742,10 @@ title(ylab=ylabel)
 # add contours for woody cover
 vegan::ordisurf(pca_result, pointdata$woody, add = TRUE, col = "green4")
 
-#First axis PCA1 explains 35.8% of the variation, PCA2 22% --> that's good, so ...% in total is explained by the chosen variables 
+#First axis PCA1 explains 32.7% of the variation, PCA2 15.9% --> that's good, so ...% in total is explained by the chosen variables 
 #first axis: the slope of the regression is the score on the axis, sites as a point, variable scores as a vector
 
-
+readr::write_csv(pointdata_long, "pointdata_long.csv")
 
 
 
