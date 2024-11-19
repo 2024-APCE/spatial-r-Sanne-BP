@@ -112,7 +112,7 @@ ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology
 elevation_map<-ggplot() +
   tidyterra::geom_spatraster(data=elevation) +
   scale_fill_gradientn(colours=terrain.colors(10),
-                       limits=c(500,2100),
+                       limits=c(1500,3000),
                        oob=squish,
                        name="meters") +
   tidyterra::geom_spatvector(data=protected_areas,
@@ -130,15 +130,42 @@ elevation_map<-ggplot() +
   ggspatial::annotation_scale(location="bl",width_hint=0.2)
 elevation_map  
 
+#plot the rainfall map 
+rain <- rast(terra::ext(rainfall), resolution = 30, crs = crs(rainfall))
+# Resample the raster to 30m resolution
+rain <- terra::resample(rainfall, rain, method = "bilinear")  
+
+rain_map<-ggplot() +
+  tidyterra::geom_spatraster(data=rain) +
+  scale_fill_gradientn(colours=pal_zissou1,
+                       limits=c(600,1000),
+                       oob=squish,
+                       name="mm/yr") +
+  tidyterra::geom_spatvector(data=protected_areas,
+                             fill=NA,linewidth=0.5) +
+  tidyterra::geom_spatvector(data=studyarea,
+                             fill=NA,linewidth=0.5,col="red") +
+  tidyterra::geom_spatvector(data=lakes,
+                             fill="royalblue3",linewidth=0.5) +
+  tidyterra::geom_spatvector(data=rivers,
+                             col="deepskyblue2",linewidth=0.5) +
+  labs(title="Rainfall") +
+  coord_sf(xlimits,ylimits,expand=F,
+           datum = sf::st_crs(32736)) +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank()) +
+  ggspatial::annotation_scale(location="bl",width_hint=0.2)
+rain_map 
+
 
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
-all_maps<-woody_map +elevation_map +
-  patchwork::plot_layout(ncol=1)
+all_maps<-woody_map +elevation_map + rain_map+
+  patchwork::plot_layout(ncol=2)
 all_maps
 ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps.png", width = 18, height = 18, units = "cm",dpi=300)
 
-# plot the rainfall map
+
 
 ############################
 ### explore your study area
