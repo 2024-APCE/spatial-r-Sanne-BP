@@ -40,6 +40,10 @@ p2<-ggplot(data=pointdata,aes(x=cec,y=woody))+
               se=T) 
 p2
 
+          #Probably means that burnfreq and cec are correlated, 
+          #so it is always good to inspect relations
+
+
 # Model_burnfreq: burning frequency predicted by Core Protected Areas and Rainfall
 model_burnfreq_init <- glm(burnfreq ~ CorProtAr + rainfall, 
               family=poisson, 
@@ -72,7 +76,7 @@ p4
 
 # model_cec: predicted by rainfall
 
-model_cec <- glm(cec ~ rainfall + CorProtAr, 
+model_cec <- lm(cec ~ rainfall + CorProtAr, 
                       data = pointdata)
 summary(model_cec)
 
@@ -105,7 +109,7 @@ p7<-ggplot(data=pointdata,aes(y=CorProtAr,x=elevation))+
 p7
 
 # model_rainfall: rainfall predicted by elevation
-model_rainfall <- glm(rainfall ~ elevation, 
+model_rainfall <- lm(rainfall ~ elevation, 
               data = pointdata)
 summary(model_rainfall)
 
@@ -132,7 +136,13 @@ psem_model <- piecewiseSEM::psem(model_woody,
 
 # Summarize the SEM results
 summary(psem_model)
-
+    
+          #Not a good model --> So, you can start reconstructing
+          #Tests of directed separation are helpful!
+               #For example: burnfreq ~ elevation is highly significant, but it is not in our                     initial model 
+               #So, there is also a direct effect of elevation on burnfreq, instead of only an                   indirect effect 
+               #So, you can add this path to the model
+          #You want to develop a model, where Chi-square is not significant, and where the test of           directed separation are not significant. However, you do not want to make a saturated             model. So, balance is important. Makes a nice puzzle. 
 
           
 # a Significant (P<0.05) global goodness of fit means that your model does not fit well, 
