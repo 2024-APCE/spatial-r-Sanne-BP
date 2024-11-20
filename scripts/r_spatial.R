@@ -144,7 +144,7 @@ rain_map<-ggplot() +
   tidyterra::geom_spatvector(data=protected_areas,
                              fill=NA,linewidth=0.5) +
   tidyterra::geom_spatvector(data=studyarea,
-                             fill=NA,linewidth=0.5,col="red") +
+                             fill=NA,linewidth=1,col="red") +
   tidyterra::geom_spatvector(data=lakes,
                              fill="royalblue3",linewidth=0.5) +
   tidyterra::geom_spatvector(data=rivers,
@@ -162,9 +162,9 @@ rain_map
 # combine the different maps  into one composite map using the patchwork library
 # and save it to a high resolution png
 all_maps<-woody_map +elevation_map + rain_map+
-  patchwork::plot_layout(ncol=2)
+  patchwork::plot_layout(ncol=3)
 all_maps
-ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps.png", width = 18, height = 18, units = "cm",dpi=300)
+ggsave("/Users/sanne/Library/Mobile Documents/com~apple~CloudDocs/Master Ecology & Conservation/GITHUB/spatial-r-Sanne-BP/figures/all_maps.png", width = 28, height = 18, units = "cm",dpi=300)
 
 
 
