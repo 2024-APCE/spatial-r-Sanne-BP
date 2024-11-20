@@ -3,7 +3,7 @@
 library(piecewiseSEM)
 
 # read the pointdata
-pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQSjeAeOypBrecE8VKoGLyJ076SytDGt8_sQSFdX-9wZwLRUBJMXmVA6GxMxF956Pwl0FCJTrcRSYbw/pub?gid=2140893522&single=true&output=csv")
+pointdata_init<-read_csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vQSjeAeOypBrecE8VKoGLyJ076SytDGt8_sQSFdX-9wZwLRUBJMXmVA6GxMxF956Pwl0FCJTrcRSYbw/pub?gid=412994482&single=true&output=csv")
 pointdata <- pointdata_init |> # Remove rows with missing values
   na.omit() |>   # keep complete cases
   dplyr:: filter(woody>0, woody<20)   # remove 2 extreme values and avoid interpolated negative values
@@ -26,8 +26,8 @@ psych::pairs.panels(pointdata,stars = T, ellipses = F)
 
 # Define the models
 
-# Model 1: woody predicted by burnfreq and rainfall
-model_woody <- glm(woody ~ burnfreq  + cec  + treecover,
+# Model 1: woody predicted by burnfreq, cec, treecover and dist2river 
+model_woody <- glm(woody ~ burnfreq  + cec  + treecover + dist2river,
                   family= poisson,
                   data = pointdata)
 
@@ -38,7 +38,7 @@ dispersion_stat #3, so overdispersion
 # If 𝜙>1 : Overdispersion is present → Consider quasi-Poisson or negative binomial.
 # If 𝜙<1 : Underdispersion (less common) → Investigate the data further.
 library(MASS)
-model_woody <- MASS::glm.nb(woody ~ burnfreq  + cec  + treecover, 
+model_woody <- MASS::glm.nb(woody ~ burnfreq  + cec  + treecover + dist2river, 
                                data = pointdata)
 summary(model_woody)
 
@@ -58,47 +58,15 @@ p2<-ggplot(data=pointdata,aes(y=woody,x=cec))+
               se=T)
 p2
 
-p1<-ggplot(data=pointdata,aes(x=burnfreq,y=woody))+
-  geom_point() +
-  geom_smooth(method="lm",
-              formula= y~x,
-              se=T)
-p1
-p2<-ggplot(data=pointdata,aes(x=cec,y=woody))+
-  geom_point() +
-  geom_smooth(method="lm",
-              #              method.args=list(family=Gamma(link="log")),
-              formula= y~x,
-              se=T) 
-p2
-
-#Probably means that burnfreq and cec are correlated, 
-#so it is always good to inspect relations
-
-
-# Model_burnfreq: burning frequency predicted by Core Protected Areas and Rainfall
-model_burnfreq_init <- glm(burnfreq ~ CorProtAr + rainfall, 
-                           family=poisson, 
-                           data = pointdata)
-# Calculate dispersion statistic
-dispersion_stat <- summary(model_burnfreq_init)$deviance / summary(model_burnfreq_init)$df.residual
-dispersion_stat
-# If 𝜙≈1 : No evidence of overdispersion → Poisson is appropriate. (mean≈variance)
-# If 𝜙>1 : Overdispersion is present → Consider quasi-Poisson or negative binomial.
-# If 𝜙<1 : Underdispersion (less common) → Investigate the data further.
-library(MASS)
-model_burnfreq <- MASS::glm.nb(burnfreq ~ CorProtAr + rainfall, 
-                               data = pointdata)
-summary(model_burnfreq)
-
-p3<-ggplot(data=pointdata,aes(y=burnfreq,x=CorProtAr))+
+p3<-ggplot(data=pointdata,aes(y=woody,x=treecover))+
   geom_jitter(width = 0.05, height = 0.1) +
   geom_smooth(method="glm",
-              method.args=list(family=quasipoisson),  # close to glm.nb
+              method.args=list(family=quasipoisson),
               formula= y~x,
               se=T)
 p3
-p4<-ggplot(data=pointdata,aes(y=burnfreq,x=rainfall))+
+
+p4<-ggplot(data=pointdata,aes(y=woody,x=dist2river))+
   geom_jitter(width = 0.05, height = 0.1) +
   geom_smooth(method="glm",
               method.args=list(family=quasipoisson),
@@ -106,9 +74,8 @@ p4<-ggplot(data=pointdata,aes(y=burnfreq,x=rainfall))+
               se=T)
 p4
 
-# model_cec: predicted by rainfall
-
-model_cec <- lm(cec ~ rainfall + CorProtAr, 
+#Model 2: cec predicted by rainfall 
+model_cec <- lm(cec ~ rainfall, 
                 data = pointdata)
 summary(model_cec)
 
@@ -119,7 +86,7 @@ p5<-ggplot(data=pointdata,aes(y=cec,x=rainfall))+
               se=T)
 p5
 
-p6<-ggplot(data=pointdata,aes(y=cec,x=CorProtAr))+
+p6<-ggplot(data=pointdata,aes(y=cec,x=rainfall))+
   geom_point() +
   geom_smooth(method="lm",
               formula= y~x,
@@ -127,30 +94,87 @@ p6<-ggplot(data=pointdata,aes(y=cec,x=CorProtAr))+
 p6
 
 
-# model_CorProtAra:  predicted by elevation
-model_CorProtAr <-glm(CorProtAr~elevation,
-                      family=binomial,
-                      data=pointdata)
-summary(model_CorProtAr)
-p7<-ggplot(data=pointdata,aes(y=CorProtAr,x=elevation))+
-  geom_jitter(height = 0.02) +
+#Model 3: treecover predicted by cec, rainfall and burnfreq
+model_treecover <- glm(treecover ~ cec  + rainfall  + burnfreq,
+                       family= poisson,
+                       data = pointdata)
+
+# Calculate dispersion statistic
+dispersion_stat <- summary(model_treecover)$deviance / summary(model_treecover)$df.residual
+dispersion_stat #3, so overdispersion
+# If 𝜙≈1 : No evidence of overdispersion → Poisson is appropriate. (mean≈variance)
+# If 𝜙>1 : Overdispersion is present → Consider quasi-Poisson or negative binomial.
+# If 𝜙<1 : Underdispersion (less common) → Investigate the data further.
+library(MASS)
+model_treecover <- MASS::glm.nb(treecover ~ cec  + rainfall  + burnfreq, 
+                            data = pointdata)
+summary(model_treecover)
+
+p7 <- ggplot(data=pointdata,aes(y=treecover,x=cec))+
+  geom_jitter(width = 0.05, height = 0.1) +
   geom_smooth(method="glm",
-              method.args=list(family=binomial),
+              method.args=list(family=quasipoisson),  # close to glm.nb
               formula= y~x,
               se=T)
 p7
 
-# model_rainfall: rainfall predicted by elevation
-model_rainfall <- lm(rainfall ~ elevation, 
-                     data = pointdata)
-summary(model_rainfall)
+p8 <- ggplot(data=pointdata,aes(y=treecover,x=rainfall))+
+  geom_jitter(width = 0.05, height = 0.1) +
+  geom_smooth(method="glm",
+              method.args=list(family=quasipoisson),  # close to glm.nb
+              formula= y~x,
+              se=T)
+p8
 
-p8<-ggplot(data=pointdata,aes(y=rainfall,x=elevation))+
+p9 <- ggplot(data=pointdata,aes(y=treecover,x=burnfreq))+
+  geom_jitter(width = 0.05, height = 0.1) +
+  geom_smooth(method="glm",
+              method.args=list(family=quasipoisson),  # close to glm.nb
+              formula= y~x,
+              se=T)
+p9
+ 
+#Model 4: burnfreq predicted by rainfall
+model_burnfreq <- glm(burnfreq ~  rainfall, 
+                           family=poisson, 
+                           data = pointdata)
+# Calculate dispersion statistic
+dispersion_stat <- summary(model_burnfreq)$deviance / summary(model_burnfreq)$df.residual
+dispersion_stat
+# If 𝜙≈1 : No evidence of overdispersion → Poisson is appropriate. (mean≈variance)
+# If 𝜙>1 : Overdispersion is present → Consider quasi-Poisson or negative binomial.
+# If 𝜙<1 : Underdispersion (less common) → Investigate the data further.
+library(MASS)
+model_burnfreq <- MASS::glm.nb(burnfreq ~ rainfall, 
+                               data = pointdata)
+summary(model_burnfreq)
+
+p10<-ggplot(data=pointdata,aes(y=burnfreq,x=rainfall))+
+  geom_jitter(width = 0.05, height = 0.1) +
+  geom_smooth(method="glm",
+              method.args=list(family=quasipoisson),  # close to glm.nb
+              formula= y~x,
+              se=T)
+p10
+
+
+#Model 5: distriver predicted by rainfall
+model_distriver <- lm(dist2river ~  rainfall, 
+                      data = pointdata)
+summary(model_distriver)
+
+p11 <- ggplot(data=pointdata,aes(y=dist2river,x=rainfall))+
   geom_point() +
   geom_smooth(method="lm",
               formula= y~x,
               se=T)
-p8
+p11
+
+
+
+#Model 6: rainfall predicted by dist2river and elevation
+
+
 
 # combine the figures
 library(patchwork)
