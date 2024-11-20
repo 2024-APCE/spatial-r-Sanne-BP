@@ -80,3 +80,68 @@ ggplot() +
   theme_void() +
   ggtitle("Causal Web of Woody Cover Drivers (7 Variables)") +
   theme(plot.title = element_text(hjust = 0.5, size = 16))
+
+
+
+#MODEL 4
+# Step 1: Define causal data
+causal_data <- data.frame(
+  From = c("elevation", "treecover", "rainfall", "evaporation", 
+           "dist2river", "cec", "burnfreq"),
+  To = c("woody", "woody", "woody", "woody", 
+         "woody", "woody", "woody"),
+  Type = c("Positive", "Positive", "Negative", "Negative", 
+           "Positive", "Positive", "Negative"),
+  Strength = c("Strong", "Strong", "Moderate", "Moderate", 
+               "Weak", "Weak", "Weak")
+)
+
+# Step 2: Define node positions (left for predictors, right for woody)
+nodes <- data.frame(
+  Name = unique(c(causal_data$From, causal_data$To)),
+  x = c(0, 0, 0, 0, 0, 0, 0, 1),  # Predictors on the left, woody on the right
+  y = c(4, 3, 2, 1, 0, -1, -2, 2)  # Adjust y-coordinates for neatness
+)
+
+# Step 3: Merge coordinates into causal_data
+causal_data <- merge(causal_data, nodes, by.x = "From", by.y = "Name", all.x = TRUE)
+colnames(causal_data)[c(4, 5)] <- c("xstart", "ystart")  # Rename for clarity
+
+causal_data <- merge(causal_data, nodes, by.x = "To", by.y = "Name", all.x = TRUE)
+colnames(causal_data)[c(6, 7)] <- c("xend", "yend")  # Rename for clarity
+
+# Step 4: Inspect the structure to verify 'Strength' exists
+print(head(causal_data))  # Debugging step: check data structure
+
+# Step 5: Plot causal web
+library(ggplot2)
+ggplot() +
+  geom_segment(
+    data = causal_data,
+    aes(x = xstart, y = ystart, xend = xend, yend = yend, color = Type, linetype = Strength),
+    arrow = arrow(length = unit(0.2, "cm")), size = 1
+  ) +
+  geom_point(data = nodes, aes(x = x, y = y), size = 5, color = "black") +
+  geom_text(data = nodes, aes(x = x, y = y, label = Name), vjust = -1, size = 5) +
+  scale_color_manual(values = c("Positive" = "green", "Negative" = "red")) +
+  scale_linetype_manual(values = c("Strong" = "solid", "Moderate" = "dashed", "Weak" = "dotted")) +
+  theme_void() +
+  ggtitle("Causal Web of Woody Cover Drivers (Simplified)") +
+  theme(plot.title = element_text(hjust = 0.5, size = 16))
+
+
+
+#NEW
+# Install the necessary packages
+library(ggdag)
+
+# Define the causal relationships
+dag <- dagify(
+  woody ~ treecover + elevation + rainfall + evaporation,
+  treecover ~ elevation,
+  rainfall ~ evaporation
+)
+
+# Plot the DAG
+ggdag(dag, layout = "nicely")
+
